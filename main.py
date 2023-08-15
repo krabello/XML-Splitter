@@ -1,5 +1,23 @@
+import os, sys
 from xml.etree import ElementTree as ET
-import os
+
+def split_file(filename):
+    base_name, extension = filename.rsplit('.', 1)
+    tree = ET.parse(filename)
+    root = tree.getroot()
+    middle_idx = len(root) // 2
+
+    write_file(f'{base_name}_1.{extension}', root[:middle_idx + 1])
+    write_file(f'{base_name}_2.{extension}', root[middle_idx + 1:])
+
+def write_file(filename, elements):
+    with open(filename, 'wb') as file:
+        file.write(b'<?xml version="1.0" encoding="UTF-8"?><events>')
+        for element in elements:
+            file.write(ET.tostring(element, encoding='utf-8').strip())
+        file.write(b'</events>')
+    
+    validate_and_info(filename)
 
 def validate_and_info(file_name):
     try:
@@ -12,27 +30,6 @@ def validate_and_info(file_name):
     except ET.ParseError:
         print(f"{file_name} is not a valid XML file.")
 
-filename = '202415.xml'
-base_name, extension = filename.rsplit('.', 1)
-
-tree = ET.parse(filename)
-root = tree.getroot()
-middle_idx = len(root) // 2
-
-file1_name = f'{base_name}_1.{extension}'
-file2_name = f'{base_name}_2.{extension}'
-
-with open(file1_name, 'wb') as file1:
-    file1.write(b'<?xml version="1.0" encoding="UTF-8"?>\n<events>\n')
-    for event in root[:middle_idx + 1]:
-        file1.write(ET.tostring(event, encoding='utf-8').strip())
-    file1.write(b'</events>')
-
-with open(file2_name, 'wb') as file2:
-    file2.write(b'<?xml version="1.0" encoding="UTF-8"?>\n<events>\n')
-    for event in root[middle_idx + 1:]:
-        file2.write(ET.tostring(event, encoding='utf-8').strip())
-    file2.write(b'</events>')
-
-validate_and_info(file1_name)
-validate_and_info(file2_name)
+if __name__ == "__main__":
+    filename = sys.argv[1]
+    split_file(filename)
